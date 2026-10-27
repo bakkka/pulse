@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  role         String    @default("viewer")
+  passwordHash String
+  hue          Int       @default(230)
+  createdAt    DateTime  @default(now())
+  lastSeenAt   DateTime?
+
+  ownedCustomers Customer[] @relation("CustomerOwner")
+}
+
+model Workspace {
+  id        String   @id @default("ws_demo")
+  name      String
+  currency  String   @default("USD")
+  timezone  String   @default("UTC")
+  createdAt DateTime @default(now())
+}
+
+model Plan {
+  id         String @id @default(cuid())
+  code       String @unique
+  name       String
+  priceCents Int
+  color      String @default("#6366F1")
+  sort       Int    @default(0)
+
+  customers Customer[]
+}
+
+model Customer {
+  id          String    @id
+  name        String
+  email       String    @unique
+  company     String
+  country     String
+  planCode    String
+  plan        Plan      @relation(fields: [planCode], references: [code])
+  status      String    @default("active")
+  mrrCents    Int       @default(0)
+  ownerId     String?
+  owner       Member?   @relation("CustomerOwner", fields: [ownerId], references: [id])
+  createdAt   DateTime
+  activatedAt DateTime?
+  churnedAt   DateTime?
+
+  invoices Invoice[]
+  events   Event[]
+
+  @@index([status])
+  @@index([planCode])
+  @@index([createdAt])
+}
+
+model Invoice {
+  id          String   @id
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amountCents Int
+  status      String   @default("paid")
+  periodStart DateTime
+  periodEnd   DateTime
+  createdAt   DateTime
+
+  @@index([createdAt])
+  @@index([customerId])
+}
+
+model Event {
+  id         String   @id
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name       String
+  createdAt  DateTime
+  meta       String?
+
+  @@index([createdAt])
+  @@index([name])
+  @@index([customerId])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
