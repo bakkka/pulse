@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: #f6f7f9;
+  color: #0b1220;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(79, 70, 229, 0.18);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d0d5dd transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #d0d5dd;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #98a2b3;
+  background-clip: content-box;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-white shadow-card;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink-900 outline-none transition
+      placeholder:text-slate-400 focus:border-brand/60 focus:ring-4 focus:ring-brand/10;
+  }
+
+  .label {
+    @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+      transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-sm {
+    @apply rounded-lg px-3 py-1.5 text-[13px];
+  }
+
+  .btn-primary {
+    @apply bg-brand text-white shadow-[0_1px_2px_rgba(16,24,40,0.1)] hover:bg-brand-hover;
+  }
+
+  .btn-ghost {
+    @apply border border-line bg-white text-ink-700 hover:border-slate-300 hover:text-ink-900;
+  }
+
+  .btn-danger {
+    @apply border border-bad/20 bg-bad/5 text-bad hover:bg-bad/10;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1
+      text-[11px] font-medium text-slate-600;
+  }
+
+  .table-head {
+    @apply text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400;
+  }
+
+  .link {
+    @apply text-brand transition hover:text-brand-hover;
+  }
+}
+
+@layer utilities {
+  .bg-dots {
+    background-image: radial-gradient(rgba(11, 18, 32, 0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 75%);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
