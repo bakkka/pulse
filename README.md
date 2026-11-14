@@ -3,6 +3,8 @@
 **Product analytics dashboard for SaaS teams.**
 Second portfolio case: MRR movement, cohort retention, activation funnel and account health — all computed from invoices and product events.
 
+[![CI](https://github.com/bakkka/pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/bakkka/pulse/actions/workflows/ci.yml)
+
 ![Pulse overview](docs/screenshots/overview.png)
 
 ## What's inside
