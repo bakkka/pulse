@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { intlLocale, type Locale } from "@/lib/locale";
 
 export const DAY = 86_400_000;
 
@@ -181,7 +182,7 @@ function churnRateBetween(core: Core, start: Date, end: Date): number {
 
 /* ------------------------------------------------------------------ series */
 
-function monthPoints(count: number, now = new Date()): { start: Date; end: Date; label: string }[] {
+function monthPoints(count: number, now = new Date(), locale: Locale = "en"): { start: Date; end: Date; label: string }[] {
   const current = startOfMonth(now);
   const points = [];
   for (let i = count - 1; i >= 0; i -= 1) {
@@ -190,7 +191,9 @@ function monthPoints(count: number, now = new Date()): { start: Date; end: Date;
     points.push({
       start,
       end,
-      label: new Intl.DateTimeFormat("en-US", { month: "short" }).format(start),
+      label: new Intl.DateTimeFormat(intlLocale(locale), { month: "short" })
+        .format(start)
+        .replace(/\.$/, ""),
     });
   }
   return points;
@@ -233,20 +236,20 @@ export type OverviewData = {
   totalAccounts: number;
 };
 
-export async function getOverview(): Promise<OverviewData> {
+export async function getOverview(locale: Locale = "en"): Promise<OverviewData> {
   const now = new Date();
   const core = await loadCore();
   const [plans, liveEvents, activeNowGroups] = await Promise.all([
     prisma.plan.findMany({ orderBy: { sort: "asc" } }),
     prisma.event.findMany({
-      where: { name: "session", createdAt: { gte: new Date(now.getTime() - 3 * 3_600_000) } },
+      where: { name: "session", createdAt: { gte: new Date(now.getTime() - 24 * 3_600_000) } },
       orderBy: { createdAt: "desc" },
       take: 7,
       include: { customer: { select: { name: true, company: true } } },
     }),
     prisma.event.groupBy({
       by: ["customerId"],
-      where: { name: "session", createdAt: { gte: new Date(now.getTime() - 60 * 60_000) } },
+      where: { name: "session", createdAt: { gte: new Date(now.getTime() - 24 * 3_600_000) } },
     }),
   ]);
 
@@ -272,7 +275,7 @@ export async function getOverview(): Promise<OverviewData> {
     ? ((mrrPrevious + prevMoved.expansion - prevMoved.contraction - prevMoved.churn) / mrrPrevious) * 100
     : 100;
 
-  const months = monthPoints(12, new Date(startOfMonth(now).getTime() - 1));
+  const months = monthPoints(12, new Date(startOfMonth(now).getTime() - 1), locale);
   const revenueSeries: SeriesPoint[] = months.map((point) => ({
     label: point.label,
     value: core.invoices
@@ -402,11 +405,11 @@ export type RevenueData = {
   }[];
 };
 
-export async function getRevenue(range: RevenueRange = "6m"): Promise<RevenueData> {
+export async function getRevenue(range: RevenueRange = "6m", locale: Locale = "en"): Promise<RevenueData> {
   const now = new Date();
   const core = await loadCore();
   const monthsCount = range === "3m" ? 3 : range === "6m" ? 6 : 12;
-  const months = monthPoints(monthsCount, new Date(startOfMonth(now).getTime() - 1));
+  const months = monthPoints(monthsCount, new Date(startOfMonth(now).getTime() - 1), locale);
   const start = months[0].start;
 
   const startMrr = mrrAt(core, start);
@@ -473,7 +476,7 @@ export type RetentionData = {
   average: (number | null)[];
 };
 
-export async function getRetention(): Promise<RetentionData> {
+export async function getRetention(locale: Locale = "en"): Promise<RetentionData> {
   const now = new Date();
   const periods = 12;
   const firstMonth = addMonths(startOfMonth(now), -(periods - 1));
@@ -527,7 +530,9 @@ export async function getRetention(): Promise<RetentionData> {
 
     return {
       key,
-      label: new Intl.DateTimeFormat("en-US", { month: "short", year: "2-digit" }).format(month),
+      label: `${new Intl.DateTimeFormat(intlLocale(locale), { month: "short" })
+        .format(month)
+        .replace(/\.$/, "")} ${String(month.getFullYear()).slice(-2)}`,
       size: members.length,
       values,
     };
@@ -552,7 +557,6 @@ export async function getRetention(): Promise<RetentionData> {
 
 export type FunnelStep = {
   key: string;
-  label: string;
   count: number;
   fromPrevious: number;
   fromStart: number;
@@ -567,11 +571,11 @@ export type FunnelData = {
 };
 
 const FUNNEL_STEPS = [
-  { key: "signup", label: "Signed up" },
-  { key: "activated", label: "Activated" },
-  { key: "project_created", label: "Created first project" },
-  { key: "invited_team", label: "Invited a teammate" },
-  { key: "paid", label: "Converted to paid" },
+  { key: "signup" },
+  { key: "activated" },
+  { key: "project_created" },
+  { key: "invited_team" },
+  { key: "paid" },
 ];
 
 export async function getFunnel(days = 90): Promise<FunnelData> {
@@ -607,7 +611,6 @@ export async function getFunnel(days = 90): Promise<FunnelData> {
 
   const steps: FunnelStep[] = FUNNEL_STEPS.map((step, index) => ({
     key: step.key,
-    label: step.label,
     count: counts[index],
     fromPrevious: index === 0 ? 100 : counts[index - 1] ? (counts[index] / counts[index - 1]) * 100 : 0,
     fromStart: counts[0] ? (counts[index] / counts[0]) * 100 : 0,

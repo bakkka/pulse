@@ -192,7 +192,7 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
     let churnedAt: Date | null = null;
     if (paying) {
       for (let m = 1; m <= monthsSince; m += 1) {
-        if (rand() < 0.026) {
+        if (rand() < 0.024) {
           const candidate = new Date(addMonths(cohortMonth, m).getTime() + rand() * 26 * DAY);
           if (candidate < now) churnedAt = candidate;
           break;
@@ -204,7 +204,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
 
     // ----------------------------------------------------------- invoices
     let lastMrr = 0;
-    let firstInvoiceDate: Date | null = null;
     if (paying) {
       for (let m = 0; m <= monthsSince; m += 1) {
         const invoiceDate = new Date(createdAt.getTime() + m * 30 * DAY + 3_600_000);
@@ -213,10 +212,10 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
 
         if (m > 0) {
           const roll = rand();
-          if (roll < 0.085 && currentPlan < planCodes.length - 1) {
+          if (currentPlan < planCodes.length - 1 && roll < 0.105) {
             currentPlan += 1;
             currentMrr = DEMO_PLANS[currentPlan].priceCents;
-          } else if (roll < 0.105 && currentPlan > 0) {
+          } else if (currentPlan > 0 && roll >= 0.105 && roll < 0.125) {
             currentPlan -= 1;
             currentMrr = DEMO_PLANS[currentPlan].priceCents;
           }
@@ -226,7 +225,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
         const invoiceStatus = isFresh && rand() < 0.3 ? "open" : rand() < 0.01 ? "void" : "paid";
 
         invoiceSeq += 1;
-        if (!firstInvoiceDate) firstInvoiceDate = invoiceDate;
         invoices.push({
           id: `inv_${invoiceSeq}`,
           customerId: `c_${i + 1}`,
@@ -250,6 +248,18 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
           : "lead";
     const mrrCents = status === "active" ? lastMrr : 0;
 
+    const elapsed = Math.max(60_000, now.getTime() - createdAt.getTime());
+    const at = (fraction: number, desiredDays: number, floor: Date) => {
+      const desired = createdAt.getTime() + rand() * desiredDays * DAY;
+      const capped = createdAt.getTime() + elapsed * fraction;
+      return new Date(Math.max(floor.getTime(), Math.min(desired, capped)));
+    };
+
+    const activatedAt = activated ? at(0.4, 3, createdAt) : null;
+    const projectAt = project && activatedAt ? at(0.6, 9, activatedAt) : null;
+    const teamAt = team && projectAt ? at(0.8, 16, projectAt) : null;
+    const paidAt = paying && teamAt ? at(0.95, 20, teamAt) : null;
+
     accounts.push({
       id: `c_${i + 1}`,
       name: `${firstName} ${lastName}`,
@@ -261,24 +271,18 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
       mrrCents,
       ownerId: rand() < 0.6 ? "m_owner" : rand() < 0.75 ? "m_admin" : null,
       createdAt,
-      activatedAt: activated ? new Date(createdAt.getTime() + rand() * 3 * DAY) : null,
+      activatedAt,
       churnedAt,
     });
 
     // ------------------------------------------------------------- events
     pushEvent(`c_${i + 1}`, "signup", createdAt, JSON.stringify({ source: SOURCES[weighted(rand, SOURCE_WEIGHTS)] }));
-    if (activated) pushEvent(`c_${i + 1}`, "activated", new Date(createdAt.getTime() + rand() * 2 * DAY));
-    if (project) pushEvent(`c_${i + 1}`, "project_created", new Date(createdAt.getTime() + rand() * 9 * DAY));
-
-    const teamAt = team ? new Date(createdAt.getTime() + rand() * 16 * DAY) : null;
+    if (activatedAt) pushEvent(`c_${i + 1}`, "activated", activatedAt);
+    if (projectAt) pushEvent(`c_${i + 1}`, "project_created", projectAt);
     if (teamAt) pushEvent(`c_${i + 1}`, "invited_team", teamAt);
 
-    if (paying && firstInvoiceDate) {
-      // Payment happens a few days after the team invite, not at the same second.
-      const convertAt = new Date(
-        Math.min(now.getTime(), (teamAt ?? firstInvoiceDate).getTime() + (2 + rand() * 16) * DAY),
-      );
-      pushEvent(`c_${i + 1}`, "paid", convertAt, JSON.stringify({ plan: planCodes[currentPlan] }));
+    if (paying && paidAt) {
+      pushEvent(`c_${i + 1}`, "paid", paidAt, JSON.stringify({ plan: planCodes[currentPlan] }));
     }
 
     // Monthly product activity — this is what the cohort heatmap counts.

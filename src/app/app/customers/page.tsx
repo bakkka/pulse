@@ -2,15 +2,8 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
 import { getCustomers } from "@/lib/analytics";
 import { formatDate, formatMoney, formatNumber } from "@/lib/format";
+import { getDict, getLocale } from "@/lib/i18n";
 import { Avatar, Badge, EmptyState, PageHeader, PlanBadge, StatusBadge, Tabs } from "@/components/ui";
-
-const STATUSES = [
-  { key: "", label: "All" },
-  { key: "active", label: "Active" },
-  { key: "trialing", label: "Trialing" },
-  { key: "churned", label: "Churned" },
-  { key: "lead", label: "Leads" },
-];
 
 export default async function CustomersPage({
   searchParams,
@@ -18,6 +11,9 @@ export default async function CustomersPage({
   searchParams: Promise<{ q?: string; status?: string; plan?: string; sort?: string; page?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const d = getDict(locale);
+
   const q = (params.q ?? "").trim();
   const status = params.status ?? "";
   const plan = params.plan ?? "";
@@ -38,6 +34,14 @@ export default async function CustomersPage({
     return `/app/customers${query ? `?${query}` : ""}`;
   };
 
+  const statusTabs = [
+    { key: "", label: d.customers.tabs.all },
+    { key: "active", label: d.customers.tabs.active },
+    { key: "trialing", label: d.customers.tabs.trialing },
+    { key: "churned", label: d.customers.tabs.churned },
+    { key: "lead", label: d.customers.tabs.lead },
+  ];
+
   const exportQuery = new URLSearchParams();
   if (q) exportQuery.set("q", q);
   if (status) exportQuery.set("status", status);
@@ -46,12 +50,12 @@ export default async function CustomersPage({
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Customers"
-        subtitle={`${formatNumber(data.total)} accounts matching the current filters`}
+        title={d.customers.title}
+        subtitle={`${formatNumber(data.total)} ${d.customers.subtitle}`}
         actions={
           <a href={`/api/export/customers?${exportQuery.toString()}`} className="btn btn-ghost btn-sm">
             <Download size={14} />
-            Export CSV
+            {d.customers.export}
           </a>
         }
       />
@@ -60,7 +64,7 @@ export default async function CustomersPage({
         <div className="px-4 pt-1">
           <Tabs
             current={buildHref({ status })}
-            items={STATUSES.map((item) => ({
+            items={statusTabs.map((item) => ({
               href: buildHref({ status: item.key, page: 1 }),
               label: item.label,
               count: data.counts[item.key || "all"] ?? 0,
@@ -76,42 +80,42 @@ export default async function CustomersPage({
               className="input pl-9"
               name="q"
               defaultValue={q}
-              placeholder="Search name, company or email"
+              placeholder={d.customers.searchPlaceholder}
               autoComplete="off"
             />
           </div>
           <select className="input w-auto min-w-[140px]" name="plan" defaultValue={plan}>
-            <option value="">All plans</option>
+            <option value="">{d.customers.allPlans}</option>
             {data.plans.map((item) => (
               <option key={item.code} value={item.code}>
                 {item.name}
               </option>
             ))}
           </select>
-          <select className="input w-auto min-w-[150px]" name="sort" defaultValue={sort}>
-            <option value="mrr">Sort: MRR</option>
-            <option value="recent">Sort: Newest</option>
-            <option value="name">Sort: Name</option>
+          <select className="input w-auto min-w-[160px]" name="sort" defaultValue={sort}>
+            <option value="recent">{d.customers.sortRecent}</option>
+            <option value="mrr">{d.customers.sortMrr}</option>
+            <option value="name">{d.customers.sortName}</option>
           </select>
           <button type="submit" className="btn btn-ghost">
-            Apply
+            {d.common.apply}
           </button>
         </form>
 
         {data.rows.length === 0 ? (
-          <EmptyState title="No customers found" text="Try a different search or clear the filters." />
+          <EmptyState title={d.customers.empty} text={d.customers.emptyText} />
         ) : (
           <>
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-line">
-                    <th className="table-head px-5 py-2.5">Customer</th>
-                    <th className="table-head px-3 py-2.5">Plan</th>
-                    <th className="table-head px-3 py-2.5">Status</th>
-                    <th className="table-head px-3 py-2.5">MRR</th>
-                    <th className="table-head px-3 py-2.5">Country</th>
-                    <th className="table-head px-3 py-2.5">Joined</th>
+                    <th className="table-head px-5 py-2.5">{d.customers.cols.customer}</th>
+                    <th className="table-head px-3 py-2.5">{d.customers.cols.plan}</th>
+                    <th className="table-head px-3 py-2.5">{d.customers.cols.status}</th>
+                    <th className="table-head px-3 py-2.5">{d.customers.cols.mrr}</th>
+                    <th className="table-head px-3 py-2.5">{d.customers.cols.country}</th>
+                    <th className="table-head px-3 py-2.5">{d.customers.cols.joined}</th>
                     <th className="table-head px-5 py-2.5" />
                   </tr>
                 </thead>
@@ -135,13 +139,18 @@ export default async function CustomersPage({
                         )}
                       </td>
                       <td className="px-3 py-3">
-                        <StatusBadge status={customer.status} />
+                        <StatusBadge
+                          status={customer.status}
+                          label={d.status[customer.status as keyof typeof d.status]}
+                        />
                       </td>
                       <td className="px-3 py-3 font-medium text-ink">
                         {customer.mrrCents ? formatMoney(customer.mrrCents) : <span className="text-slate-300">—</span>}
                       </td>
                       <td className="px-3 py-3 text-[12px] uppercase text-slate-500">{customer.country}</td>
-                      <td className="px-3 py-3 text-[12px] text-slate-500">{formatDate(customer.createdAt)}</td>
+                      <td className="px-3 py-3 text-[12px] text-slate-500">
+                        {formatDate(customer.createdAt, locale)}
+                      </td>
                       <td className="px-5 py-3 text-right">
                         <Link
                           href={`/app/customers/${customer.id}`}
@@ -182,8 +191,9 @@ export default async function CustomersPage({
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-[12px] text-slate-500">
           <span>
-            Showing {formatNumber((data.page - 1) * data.pageSize + 1)}–
-            {formatNumber(Math.min(data.page * data.pageSize, data.total))} of {formatNumber(data.total)}
+            {d.customers.showing} {formatNumber((data.page - 1) * data.pageSize + 1)}–
+            {formatNumber(Math.min(data.page * data.pageSize, data.total))} {d.common.of}{" "}
+            {formatNumber(data.total)}
           </span>
           <div className="flex items-center gap-2">
             <Link
@@ -193,7 +203,7 @@ export default async function CustomersPage({
               }`}
             >
               <ChevronLeft size={13} />
-              Prev
+              {d.common.prev}
             </Link>
             <span className="font-mono text-[11px] text-slate-400">
               {data.page} / {data.pages}
@@ -204,16 +214,14 @@ export default async function CustomersPage({
                 data.page >= data.pages ? "pointer-events-none opacity-40" : "hover:border-brand/40 hover:text-brand"
               }`}
             >
-              Next
+              {d.common.next}
               <ChevronRight size={13} />
             </Link>
           </div>
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-400">
-        Tip: export respects the current filters. CSV is capped at 5,000 rows in the demo.
-      </p>
+      <p className="text-[11px] text-slate-400">{d.customers.tip}</p>
     </div>
   );
 }

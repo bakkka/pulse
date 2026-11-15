@@ -13,48 +13,33 @@ import {
   Users,
 } from "lucide-react";
 import { getOverview } from "@/lib/analytics";
+import { prisma } from "@/lib/db";
 import { formatMoney, formatNumber } from "@/lib/format";
+import { getDict, getLocale } from "@/lib/i18n";
 import { AreaChart } from "@/components/charts";
 import { Badge } from "@/components/ui";
+import { LocaleSwitch } from "@/components/locale-switch";
 
 export const dynamic = "force-dynamic";
 
-const FEATURES = [
-  {
-    icon: <BarChart3 size={17} />,
-    title: "Revenue that reconciles",
-    text: "MRR, new, expansion, contraction and churn are derived from invoices — every bar adds up to the total.",
-  },
-  {
-    icon: <Grid3x3 size={17} />,
-    title: "Cohort retention",
-    text: "Twelve monthly cohorts in a heatmap, plus a weighted retention curve. See which signup months actually stick.",
-  },
-  {
-    icon: <ListFilter size={17} />,
-    title: "Activation funnel",
-    text: "Signup → activated → project → team → paid, with step conversion, drop-off and average time to convert.",
-  },
-  {
-    icon: <Users size={17} />,
-    title: "Account-level health",
-    text: "Search, filter and drill into any customer: invoices, events, plan, owner and lifetime value.",
-  },
-  {
-    icon: <ShieldCheck size={17} />,
-    title: "Roles with teeth",
-    text: "Owner, admin and viewer. Permissions are checked on the server in every action, not just hidden in the UI.",
-  },
-  {
-    icon: <Download size={17} />,
-    title: "Export without tickets",
-    text: "CSV of the filtered customer base, generated on request and scoped to your current view.",
-  },
+const FEATURE_ICONS = [
+  <BarChart3 key="revenue" size={17} />,
+  <Grid3x3 key="retention" size={17} />,
+  <ListFilter key="funnel" size={17} />,
+  <Users key="accounts" size={17} />,
+  <ShieldCheck key="roles" size={17} />,
+  <Download key="export" size={17} />,
 ];
 
 export default async function LandingPage() {
-  const data = await getOverview();
+  const locale = await getLocale();
+  const d = getDict(locale);
+  const data = await getOverview(locale);
   const revenueTotal = data.revenueSeries.reduce((sum, point) => sum + point.value, 0);
+  const [invoiceCount, eventCount] = await Promise.all([
+    prisma.invoice.count(),
+    prisma.event.count(),
+  ]);
 
   return (
     <div className="min-h-screen">
@@ -68,15 +53,16 @@ export default async function LandingPage() {
           </Link>
 
           <nav className="ml-4 hidden items-center gap-6 text-[13px] font-medium text-slate-500 md:flex">
-            <a href="#product" className="transition hover:text-ink">Product</a>
-            <a href="#under-the-hood" className="transition hover:text-ink">How it works</a>
-            <a href="#metrics" className="transition hover:text-ink">Data</a>
+            <a href="#product" className="transition hover:text-ink">{d.landing.product}</a>
+            <a href="#under-the-hood" className="transition hover:text-ink">{d.landing.howItWorks}</a>
+            <a href="#metrics" className="transition hover:text-ink">{d.landing.data}</a>
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <Link href="/login" className="btn btn-ghost btn-sm">Sign in</Link>
+            <LocaleSwitch locale={locale} />
+            <Link href="/login" className="hidden btn btn-ghost btn-sm sm:inline-flex">{d.common.signIn}</Link>
             <Link href="/app" className="btn btn-primary btn-sm">
-              Open demo
+              {d.landing.openDemo}
               <ArrowRight size={14} />
             </Link>
           </div>
@@ -91,46 +77,43 @@ export default async function LandingPage() {
             <div className="animate-fade-up">
               <Badge tone="brand" className="px-3 py-1">
                 <Layers size={12} />
-                Portfolio case · SaaS analytics
+                {d.landing.badge}
               </Badge>
 
               <h1 className="mt-5 text-[38px] font-semibold leading-[1.05] tracking-tight text-ink sm:text-[50px]">
-                Product analytics
+                {d.landing.titleA}
                 <br />
-                your team{" "}
+                {d.landing.titleB}{" "}
                 <span className="bg-gradient-to-r from-brand to-violet-500 bg-clip-text text-transparent">
-                  actually opens
+                  {d.landing.titleC}
                 </span>
                 .
               </h1>
 
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-slate-500">
-                Pulse turns invoices and product events into four numbers that matter: MRR,
-                retention, activation and churn. Every chart is computed from the database — no
-                hardcoded "demo data" screenshots.
+                {d.landing.subtitle}
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Link href="/app" className="btn btn-primary px-5 py-3">
-                  Open the live demo
+                  {d.landing.ctaPrimary}
                   <ArrowRight size={16} />
                 </Link>
                 <a href="#under-the-hood" className="btn btn-ghost px-5 py-3">
-                  How it&apos;s built
+                  {d.landing.ctaSecondary}
                 </a>
               </div>
 
               <p className="mt-3 text-[11px] text-slate-400">
-                Demo accounts for owner, admin and viewer · password{" "}
-                <span className="font-mono text-slate-500">pulse</span>
+                {d.landing.demoNote} <span className="font-mono text-slate-500">pulse</span>
               </p>
 
               <dl className="mt-9 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
                 {[
-                  [formatMoney(data.mrr), "MRR"],
-                  [formatNumber(data.activeCustomers), "active customers"],
-                  [`${data.nrr.toFixed(0)}%`, "net revenue retention"],
-                  [formatNumber(data.totalAccounts), "accounts"],
+                  [formatMoney(data.mrr), d.landing.stats.mrr],
+                  [formatNumber(data.activeCustomers), d.landing.stats.active],
+                  [`${data.nrr.toFixed(0)}%`, d.landing.stats.nrr],
+                  [formatNumber(data.totalAccounts), d.landing.stats.accounts],
                 ].map(([value, label]) => (
                   <div key={label}>
                     <dd className="text-xl font-semibold tracking-tight text-ink">{value}</dd>
@@ -154,24 +137,27 @@ export default async function LandingPage() {
                   </span>
                   <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-good">
                     <span className="h-1.5 w-1.5 rounded-full bg-good" />
-                    live
+                    {d.landing.preview.live}
                   </span>
                 </div>
 
                 <div className="p-4 sm:p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[13px] font-semibold text-ink">Overview</p>
-                      <p className="text-[10px] text-slate-400">Acme Cloud · last 12 months</p>
+                      <p className="text-[13px] font-semibold text-ink">{d.landing.preview.overview}</p>
+                      <p className="text-[10px] text-slate-400">{d.landing.preview.subtitle}</p>
                     </div>
-                    <Badge tone="brand">{data.mrrDelta >= 0 ? "+" : ""}{data.mrrDelta.toFixed(1)}%</Badge>
+                    <Badge tone="brand">
+                      {data.mrrDelta >= 0 ? "+" : ""}
+                      {data.mrrDelta.toFixed(1)}%
+                    </Badge>
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-2">
                     {[
-                      ["MRR", formatMoney(data.mrr)],
-                      ["Customers", formatNumber(data.activeCustomers)],
-                      ["NRR", `${data.nrr.toFixed(0)}%`],
+                      [d.landing.preview.mrr, formatMoney(data.mrr)],
+                      [d.landing.preview.customers, formatNumber(data.activeCustomers)],
+                      [d.landing.preview.nrr, `${data.nrr.toFixed(0)}%`],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-xl border border-line-soft bg-slate-50/60 p-2.5">
                         <p className="text-[9px] uppercase tracking-wider text-slate-400">{label}</p>
@@ -185,7 +171,9 @@ export default async function LandingPage() {
                   </div>
 
                   <div className="mt-3 flex items-center justify-between border-t border-line-soft pt-3">
-                    <span className="text-[10px] text-slate-400">Paid invoices · {formatMoney(revenueTotal, { compact: true })}</span>
+                    <span className="text-[10px] text-slate-400">
+                      {d.landing.preview.paidInvoices} · {formatMoney(revenueTotal, { compact: true })}
+                    </span>
                     <div className="flex items-center gap-2">
                       {data.planMix.map((plan) => (
                         <span key={plan.code} className="flex items-center gap-1 text-[9px] text-slate-400">
@@ -200,7 +188,7 @@ export default async function LandingPage() {
 
               <div className="mx-auto mt-4 flex w-fit items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-[10px] text-slate-400 shadow-card">
                 <Gauge size={12} className="text-brand" />
-                Real numbers from the seeded database
+                {d.landing.preview.note}
               </div>
             </div>
           </div>
@@ -210,20 +198,20 @@ export default async function LandingPage() {
         <section id="product" className="border-t border-line py-16 sm:py-20">
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="max-w-2xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">Product</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                Six screens that answer six different questions
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                Built for the Monday metrics meeting: what changed, why, and which account is behind it.
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">
+                {d.landing.product}
               </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+                {d.landing.featuresTitle}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">{d.landing.featuresSubtitle}</p>
             </div>
 
             <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map((feature) => (
+              {d.landing.features.map((feature, index) => (
                 <article key={feature.title} className="card p-5 transition hover:border-brand/30 hover:shadow-pop">
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                    {feature.icon}
+                    {FEATURE_ICONS[index]}
                   </span>
                   <h3 className="mt-3.5 text-[14px] font-semibold text-ink">{feature.title}</h3>
                   <p className="mt-1.5 text-[12.5px] leading-relaxed text-slate-500">{feature.text}</p>
@@ -237,61 +225,46 @@ export default async function LandingPage() {
         <section id="under-the-hood" className="border-t border-line bg-white py-16 sm:py-20">
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="max-w-2xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">Under the hood</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                Metrics are computed, not painted
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                The interesting part of analytics is the model, not the gradient. Here is the shape of it.
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">
+                {d.landing.howItWorks}
               </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+                {d.landing.under.title}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">{d.landing.under.subtitle}</p>
             </div>
 
             <div className="mt-9 grid gap-4 lg:grid-cols-3">
               <div className="card p-5">
                 <div className="flex items-center gap-2">
                   <Database size={15} className="text-slate-400" />
-                  <h3 className="text-[13px] font-semibold text-ink">Data model</h3>
+                  <h3 className="text-[13px] font-semibold text-ink">{d.landing.under.dataTitle}</h3>
                 </div>
-                <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-                  Customers, plans, invoices and product events. MRR history is reconstructed by
-                  walking each account&apos;s invoices, so upgrades and downgrades show up as
-                  expansion and contraction.
-                </p>
+                <p className="mt-2 text-[12px] leading-relaxed text-slate-500">{d.landing.under.dataText}</p>
                 <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-[10px] leading-relaxed text-slate-300">
-{`Customer → Invoice[]  // revenue
-Customer → Event[]    // cohorts, funnel`}
+                  {d.landing.under.dataCode}
                 </pre>
               </div>
 
               <div className="card p-5">
                 <div className="flex items-center gap-2">
                   <BarChart3 size={15} className="text-slate-400" />
-                  <h3 className="text-[13px] font-semibold text-ink">Metrics layer</h3>
+                  <h3 className="text-[13px] font-semibold text-ink">{d.landing.under.metricsTitle}</h3>
                 </div>
-                <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-                  One module answers every screen: MRR at a date, active customers, movement between
-                  two dates, cohort retention, funnel steps. Dates are passed in, never hidden in a
-                  chart component.
-                </p>
+                <p className="mt-2 text-[12px] leading-relaxed text-slate-500">{d.landing.under.metricsText}</p>
                 <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-[10px] leading-relaxed text-slate-300">
-{`mrrAt(date) // latest invoice per live account
-movementBetween(from, to) // new, expansion, churn`}
+                  {d.landing.under.metricsCode}
                 </pre>
               </div>
 
               <div className="card p-5">
                 <div className="flex items-center gap-2">
                   <Layers size={15} className="text-slate-400" />
-                  <h3 className="text-[13px] font-semibold text-ink">UI layer</h3>
+                  <h3 className="text-[13px] font-semibold text-ink">{d.landing.under.uiTitle}</h3>
                 </div>
-                <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-                  Server components for data, small client components for hover interactions.
-                  Charts are hand-built SVG: no chart library, no bundle surprise, full control over
-                  edge cases like empty months.
-                </p>
+                <p className="mt-2 text-[12px] leading-relaxed text-slate-500">{d.landing.under.uiText}</p>
                 <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-[10px] leading-relaxed text-slate-300">
-{`Server Component → data
-Client Chart → hover, tooltip`}
+                  {d.landing.under.uiCode}
                 </pre>
               </div>
             </div>
@@ -302,10 +275,10 @@ Client Chart → hover, tooltip`}
         <section id="metrics" className="border-t border-line py-14">
           <div className="mx-auto grid w-full max-w-6xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
             {[
-              [formatNumber(data.totalAccounts), "seeded accounts"],
-              ["3,560", "invoices"],
-              ["13,751", "product events"],
-              ["12", "monthly cohorts"],
+              [formatNumber(data.totalAccounts), d.landing.metrics.accounts],
+              [formatNumber(invoiceCount), d.landing.metrics.invoices],
+              [formatNumber(eventCount), d.landing.metrics.events],
+              ["12", d.landing.metrics.cohorts],
             ].map(([value, label]) => (
               <div key={label} className="card p-5">
                 <p className="text-2xl font-semibold tracking-tight text-ink">{value}</p>
@@ -322,20 +295,17 @@ Client Chart → hover, tooltip`}
               <div className="relative flex flex-wrap items-center justify-between gap-6">
                 <div className="max-w-xl">
                   <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                    Poke at the demo, then read the code
+                    {d.landing.ctaTitle}
                   </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                    Three roles, twelve months of data, real invoices. The repository includes the
-                    schema, the metrics module and this case study.
-                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-500">{d.landing.ctaText}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Link href="/app" className="btn btn-primary px-5 py-3">
-                    Open the demo
+                    {d.landing.ctaButton}
                     <ArrowRight size={16} />
                   </Link>
                   <a href="#product" className="btn btn-ghost px-5 py-3">
-                    Back to top
+                    {d.landing.ctaBack}
                   </a>
                 </div>
               </div>
@@ -352,9 +322,12 @@ Client Chart → hover, tooltip`}
             </span>
             <span className="font-medium text-slate-600">Pulse</span>
             <span className="text-slate-300">·</span>
-            <span>Portfolio case. Demo data, simulated billing.</span>
+            <span>{d.landing.footer}</span>
           </div>
-          <span>Built with Next.js · Prisma · custom SVG charts</span>
+          <div className="flex items-center gap-4">
+            <span>{d.landing.footerStack}</span>
+            <LocaleSwitch locale={locale} />
+          </div>
         </div>
       </footer>
     </div>

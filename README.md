@@ -7,6 +7,8 @@ Second portfolio case: MRR movement, cohort retention, activation funnel and acc
 
 ![Pulse overview](docs/screenshots/overview.png)
 
+<sub>Русская версия: [overview-ru.png](docs/screenshots/overview-ru.png) · [landing-ru.png](docs/screenshots/landing-ru.png)</sub>
+
 ## What's inside
 
 - **Overview** — MRR, active customers, churn, NRR, revenue trend, MRR movement, plan mix, live sessions, top accounts by lifetime value.
@@ -17,7 +19,9 @@ Second portfolio case: MRR movement, cohort retention, activation funnel and acc
 - **Team** — owner / admin / viewer roles, invites, role changes, removal. Permissions are enforced server-side.
 - **Settings** — workspace, currency, timezone, demo reset.
 
-Everything is bilingual-ready data-wise but the UI is English (international SaaS register).
+**Bilingual UI:** RU/EN switcher in the header and on the landing. Dates, chart month labels, cohort labels, statuses and all UI copy follow the locale; the data stays in USD.
+
+The interface is English by default (international SaaS register) and switches to Russian in one click.
 
 ## Demo accounts
 
@@ -33,7 +37,7 @@ Password for all: **`pulse`**
 
 ```bash
 npm install
-npm run setup      # schema + deterministic seed (1,400 accounts, 3,485 invoices, 13,594 events)
+npm run setup      # schema + deterministic seed (1,400 accounts, ~3,600 invoices, ~13,800 events)
 npm run dev        # http://localhost:3200
 ```
 
@@ -52,6 +56,7 @@ npm run start      # http://localhost:3200
 | Backend | Server Actions, Prisma ORM, SQLite locally → Postgres in production |
 | Charts | Hand-built SVG (area, diverging bars, donut, heatmap, sparkline) |
 | Auth | scrypt hashes, HMAC-signed httpOnly sessions, server-side RBAC |
+| i18n | Cookie-based RU/EN dictionaries, localized dates and labels |
 
 No chart library, no UI kit: the charts are small components with hover state, which keeps the bundle at ~116 kB First Load JS.
 
@@ -96,8 +101,8 @@ src/
     app/                     dashboard shell + 7 screens
     actions.ts               server actions (auth, team, customers, demo)
     api/export/customers     CSV export
-  components/                UI kit, SVG charts, navigation
-  lib/                       analytics, auth, sessions, formatting
+  components/                UI kit, SVG charts, navigation, locale switch
+  lib/                       analytics, auth, sessions, formatting, i18n, locale
 prisma/
   schema.prisma
   demo-data.ts               deterministic generator

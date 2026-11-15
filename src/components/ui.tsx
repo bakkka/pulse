@@ -187,7 +187,7 @@ export function Field({
   );
 }
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
   const map: Record<string, { tone: Tone; label: string }> = {
     active: { tone: "good", label: "Active" },
     trialing: { tone: "brand", label: "Trialing" },
@@ -195,7 +195,7 @@ export function StatusBadge({ status }: { status: string }) {
     lead: { tone: "warn", label: "Lead" },
   };
   const entry = map[status] ?? { tone: "neutral" as Tone, label: status };
-  return <Badge tone={entry.tone}>{entry.label}</Badge>;
+  return <Badge tone={entry.tone}>{label ?? entry.label}</Badge>;
 }
 
 export function PlanBadge({ name, color }: { name: string; color: string }) {

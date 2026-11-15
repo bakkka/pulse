@@ -13,32 +13,48 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  type LucideIcon,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { signOut } from "@/app/actions";
 import { cn } from "@/components/ui";
 
+export type NavLabels = {
+  analytics: string;
+  workspace: string;
+  overview: string;
+  revenue: string;
+  retention: string;
+  funnel: string;
+  customers: string;
+  team: string;
+  settings: string;
+  caseStudy: string;
+  signOut: string;
+};
+
 type NavItem = { key: string; href: string; label: string; icon: LucideIcon };
 
-const GROUPS: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Analytics",
-    items: [
-      { key: "overview", href: "/app", label: "Overview", icon: LayoutDashboard },
-      { key: "revenue", href: "/app/revenue", label: "Revenue", icon: BarChart3 },
-      { key: "retention", href: "/app/retention", label: "Retention", icon: Grid3x3 },
-      { key: "funnel", href: "/app/funnel", label: "Funnel", icon: ListFilter },
-    ],
-  },
-  {
-    label: "Workspace",
-    items: [
-      { key: "customers", href: "/app/customers", label: "Customers", icon: Users },
-      { key: "team", href: "/app/team", label: "Team", icon: ShieldCheck },
-      { key: "settings", href: "/app/settings", label: "Settings", icon: Settings },
-    ],
-  },
-];
+function buildGroups(labels: NavLabels): { label: string; items: NavItem[] }[] {
+  return [
+    {
+      label: labels.analytics,
+      items: [
+        { key: "overview", href: "/app", label: labels.overview, icon: LayoutDashboard },
+        { key: "revenue", href: "/app/revenue", label: labels.revenue, icon: BarChart3 },
+        { key: "retention", href: "/app/retention", label: labels.retention, icon: Grid3x3 },
+        { key: "funnel", href: "/app/funnel", label: labels.funnel, icon: ListFilter },
+      ],
+    },
+    {
+      label: labels.workspace,
+      items: [
+        { key: "customers", href: "/app/customers", label: labels.customers, icon: Users },
+        { key: "team", href: "/app/team", label: labels.team, icon: ShieldCheck },
+        { key: "settings", href: "/app/settings", label: labels.settings, icon: Settings },
+      ],
+    },
+  ];
+}
 
 function isActive(pathname: string, href: string) {
   return href === "/app" ? pathname === "/app" : pathname.startsWith(href);
@@ -48,10 +64,12 @@ export function AppNav({
   name,
   role,
   hue,
+  labels,
 }: {
   name: string;
   role: string;
   hue: number;
+  labels: NavLabels;
 }) {
   const pathname = usePathname();
 
@@ -68,7 +86,7 @@ export function AppNav({
       </div>
 
       <nav className="flex-1 space-y-6 px-3">
-        {GROUPS.map((group) => (
+        {buildGroups(labels).map((group) => (
           <div key={group.label}>
             <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
               {group.label}
@@ -103,7 +121,7 @@ export function AppNav({
           href="/"
           className="mb-2 flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-[11px] font-medium text-slate-400 transition hover:border-white/20 hover:text-white"
         >
-          Case study
+          {labels.caseStudy}
           <ExternalLink size={12} />
         </Link>
 
@@ -126,8 +144,8 @@ export function AppNav({
             <button
               type="submit"
               className="rounded-md p-1.5 text-slate-500 transition hover:bg-white/10 hover:text-white"
-              aria-label="Sign out"
-              title="Sign out"
+              aria-label={labels.signOut}
+              title={labels.signOut}
             >
               <LogOut size={14} />
             </button>
@@ -138,9 +156,9 @@ export function AppNav({
   );
 }
 
-export function MobileNav() {
+export function MobileNav({ labels }: { labels: NavLabels }) {
   const pathname = usePathname();
-  const items = GROUPS.flatMap((group) => group.items);
+  const items = buildGroups(labels).flatMap((group) => group.items);
 
   return (
     <nav className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4 pb-1 lg:hidden">

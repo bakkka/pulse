@@ -13,20 +13,29 @@ import {
 } from "lucide-react";
 import { getCustomerDetail } from "@/lib/analytics";
 import { prisma } from "@/lib/db";
-import { canEdit } from "@/lib/auth";
-import { requireMember } from "@/lib/auth";
-import { formatDate, formatDateTime, formatMoney, formatShortDate } from "@/lib/format";
+import { canEdit, requireMember } from "@/lib/auth";
+import { formatDate, formatDateTime, formatDays, formatMoney, formatShortDate } from "@/lib/format";
+import { getDict, getLocale, t } from "@/lib/i18n";
 import { updateCustomerPlan } from "@/app/actions";
 import { AreaChart } from "@/components/charts";
-import { Avatar, Badge, Field, Notice, PageHeader, PlanBadge, SectionCard, StatusBadge } from "@/components/ui";
+import {
+  Avatar,
+  Badge,
+  Field,
+  Notice,
+  PageHeader,
+  PlanBadge,
+  SectionCard,
+  StatusBadge,
+} from "@/components/ui";
 
-const EVENT_META: Record<string, { icon: React.ReactNode; title: string; hint: string }> = {
-  signup: { icon: <Sparkles size={13} />, title: "Signed up", hint: "account created" },
-  activated: { icon: <Zap size={13} />, title: "Activated", hint: "completed onboarding" },
-  project_created: { icon: <Building2 size={13} />, title: "Created a project", hint: "first value moment" },
-  invited_team: { icon: <UserRound size={13} />, title: "Invited a teammate", hint: "team expansion" },
-  paid: { icon: <CreditCard size={13} />, title: "Converted to paid", hint: "first invoice" },
-  session: { icon: <Zap size={13} />, title: "Opened the app", hint: "product session" },
+const EVENT_ICONS: Record<string, React.ReactNode> = {
+  signup: <Sparkles size={13} />,
+  activated: <Zap size={13} />,
+  project_created: <Building2 size={13} />,
+  invited_team: <UserRound size={13} />,
+  paid: <CreditCard size={13} />,
+  session: <Zap size={13} />,
 };
 
 export default async function CustomerPage({
@@ -38,25 +47,36 @@ export default async function CustomerPage({
 }) {
   const { id } = await params;
   const { ok } = await searchParams;
+  const locale = await getLocale();
+  const d = getDict(locale);
   const member = await requireMember();
   const editable = canEdit(member.role);
 
-  const [detail, plans] = await Promise.all([getCustomerDetail(id), prisma.plan.findMany({ orderBy: { sort: "asc" } })]);
+  const [detail, plans] = await Promise.all([
+    getCustomerDetail(id),
+    prisma.plan.findMany({ orderBy: { sort: "asc" } }),
+  ]);
   if (!detail) notFound();
 
   const { customer } = detail;
   const invoiceCurve = [...customer.invoices]
     .reverse()
-    .map((invoice) => ({ label: formatShortDate(invoice.createdAt), value: invoice.amountCents }));
+    .map((invoice) => ({ label: formatShortDate(invoice.createdAt, locale), value: invoice.amountCents }));
+
+  const eventLabel = (name: string) =>
+    d.events[name as keyof typeof d.events] ?? { title: name, hint: "" };
 
   return (
     <div className="space-y-5">
-      <Link href="/app/customers" className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 transition hover:text-ink">
+      <Link
+        href="/app/customers"
+        className="inline-flex items-center gap-1.5 text-[12px] text-slate-500 transition hover:text-ink"
+      >
         <ArrowLeft size={13} />
-        Customers
+        {d.customer.back}
       </Link>
 
-      {ok === "saved" ? <Notice tone="good">Customer updated.</Notice> : null}
+      {ok === "saved" ? <Notice tone="good">{d.customer.updated}</Notice> : null}
 
       <div className="card flex flex-wrap items-center gap-4 p-5">
         <Avatar name={customer.name} hue={238} className="h-14 w-14 text-base" />
@@ -75,57 +95,78 @@ export default async function CustomerPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <PlanBadge name={customer.plan.name} color={customer.plan.color} />
-          <StatusBadge status={customer.status} />
+          <StatusBadge status={customer.status} label={d.status[customer.status as keyof typeof d.status]} />
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="card p-4">
-          <p className="text-[11px] uppercase tracking-wider text-slate-400">Current MRR</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-400">{d.customer.mrr}</p>
           <p className="mt-1 text-xl font-semibold text-ink">
             {customer.mrrCents ? formatMoney(customer.mrrCents) : "—"}
           </p>
         </div>
         <div className="card p-4">
-          <p className="text-[11px] uppercase tracking-wider text-slate-400">Lifetime</p>
-          <p className="mt-1 text-xl font-semibold text-ink">{detail.lifetimeDays} days</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-400">{d.customer.lifetime}</p>
+          <p className="mt-1 text-xl font-semibold text-ink">
+            {formatDays(detail.lifetimeDays, locale)}
+          </p>
         </div>
         <div className="card p-4">
-          <p className="text-[11px] uppercase tracking-wider text-slate-400">Invoices</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-400">{d.customer.invoices}</p>
           <p className="mt-1 text-xl font-semibold text-ink">{detail.invoiceCount}</p>
         </div>
         <div className="card p-4">
-          <p className="text-[11px] uppercase tracking-wider text-slate-400">Total paid</p>
+          <p className="text-[11px] uppercase tracking-wider text-slate-400">{d.customer.totalPaid}</p>
           <p className="mt-1 text-xl font-semibold text-ink">{formatMoney(detail.totalPaid)}</p>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <SectionCard title="Billing history" hint={`${detail.invoiceCount} ${detail.invoiceCount === 1 ? "invoice" : "invoices"}`} bodyClassName="p-0">
+          <SectionCard
+            title={d.customer.billing}
+            hint={`${detail.invoiceCount} ${
+              detail.invoiceCount === 1 ? d.customer.invoiceCountOne : d.customer.invoiceCount
+            }`}
+            bodyClassName="p-0"
+          >
             {customer.invoices.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-slate-400">No invoices yet.</p>
+              <p className="px-5 py-8 text-center text-sm text-slate-400">{d.customer.noInvoices}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-line">
-                      <th className="table-head px-5 py-2.5">Date</th>
-                      <th className="table-head px-3 py-2.5">Period</th>
-                      <th className="table-head px-3 py-2.5">Status</th>
-                      <th className="table-head px-5 py-2.5 text-right">Amount</th>
+                      <th className="table-head px-5 py-2.5">{d.customer.cols.date}</th>
+                      <th className="table-head px-3 py-2.5">{d.customer.cols.period}</th>
+                      <th className="table-head px-3 py-2.5">{d.customer.cols.status}</th>
+                      <th className="table-head px-5 py-2.5 text-right">{d.customer.cols.amount}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {customer.invoices.map((invoice) => (
                       <tr key={invoice.id} className="border-b border-line-soft last:border-0">
-                        <td className="px-5 py-2.5 text-[12px] text-slate-600">{formatDate(invoice.createdAt)}</td>
+                        <td className="px-5 py-2.5 text-[12px] text-slate-600">
+                          {formatDate(invoice.createdAt, locale)}
+                        </td>
                         <td className="px-3 py-2.5 text-[11px] text-slate-400">
-                          {formatShortDate(invoice.periodStart)} – {formatShortDate(invoice.periodEnd)}
+                          {formatShortDate(invoice.periodStart, locale)} –{" "}
+                          {formatShortDate(invoice.periodEnd, locale)}
                         </td>
                         <td className="px-3 py-2.5">
-                          <Badge tone={invoice.status === "paid" ? "good" : invoice.status === "open" ? "warn" : "muted"}>
-                            {invoice.status}
+                          <Badge
+                            tone={
+                              invoice.status === "paid"
+                                ? "good"
+                                : invoice.status === "open"
+                                  ? "warn"
+                                  : "muted"
+                            }
+                          >
+                            {d.revenue.invoiceStatus[
+                              invoice.status as keyof typeof d.revenue.invoiceStatus
+                            ] ?? invoice.status}
                           </Badge>
                         </td>
                         <td className="px-5 py-2.5 text-right font-medium text-ink">
@@ -140,29 +181,27 @@ export default async function CustomerPage({
           </SectionCard>
 
           {invoiceCurve.length >= 2 ? (
-            <SectionCard title="Invoice amount" hint="Last 12 billing periods">
+            <SectionCard title={d.customer.invoiceChart} hint={d.customer.invoiceChartHint}>
               <AreaChart data={invoiceCurve} height={200} />
             </SectionCard>
           ) : null}
 
-          <SectionCard title="Activity" hint="Product events for this account" bodyClassName="p-0">
+          <SectionCard title={d.customer.activity} hint={d.customer.activityHint} bodyClassName="p-0">
             <ul className="divide-y divide-line-soft">
               {customer.events.map((event) => {
-                const meta = EVENT_META[event.name] ?? {
-                  icon: <Zap size={13} />,
-                  title: event.name,
-                  hint: "",
-                };
+                const meta = eventLabel(event.name);
                 return (
                   <li key={event.id} className="flex items-start gap-3 px-5 py-3">
                     <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                      {meta.icon}
+                      {EVENT_ICONS[event.name] ?? <Zap size={13} />}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-ink">{meta.title}</p>
                       <p className="text-[11px] text-slate-400">{meta.hint}</p>
                     </div>
-                    <span className="shrink-0 text-[11px] text-slate-400">{formatDateTime(event.createdAt)}</span>
+                    <span className="shrink-0 text-[11px] text-slate-400">
+                      {formatDateTime(event.createdAt, locale)}
+                    </span>
                   </li>
                 );
               })}
@@ -171,24 +210,28 @@ export default async function CustomerPage({
         </div>
 
         <div className="space-y-4">
-          <SectionCard title="Account" bodyClassName="p-0">
+          <SectionCard title={d.customer.account} bodyClassName="p-0">
             <dl className="divide-y divide-line-soft text-[12px]">
               {[
-                { icon: <Globe2 size={12} />, label: "Country", value: customer.country },
-                { icon: <CalendarDays size={12} />, label: "Joined", value: formatDate(customer.createdAt) },
+                { icon: <Globe2 size={12} />, label: d.customer.country, value: customer.country },
+                {
+                  icon: <CalendarDays size={12} />,
+                  label: d.customer.joined,
+                  value: formatDate(customer.createdAt, locale),
+                },
                 {
                   icon: <Zap size={12} />,
-                  label: "Activated",
-                  value: customer.activatedAt ? formatDate(customer.activatedAt) : "—",
+                  label: d.customer.activated,
+                  value: customer.activatedAt ? formatDate(customer.activatedAt, locale) : "—",
                 },
                 {
                   icon: <UserRound size={12} />,
-                  label: "Owner",
-                  value: customer.owner?.name ?? "Unassigned",
+                  label: d.customer.owner,
+                  value: customer.owner?.name ?? d.customer.unassigned,
                 },
                 {
                   icon: <CreditCard size={12} />,
-                  label: "Events",
+                  label: d.customer.eventsCount,
                   value: String(detail.eventCount),
                 },
               ].map((row) => (
@@ -203,11 +246,14 @@ export default async function CustomerPage({
             </dl>
           </SectionCard>
 
-          <SectionCard title="Plan" hint={editable ? "Changes take effect immediately" : "Read-only for your role"}>
+          <SectionCard
+            title={d.customer.plan}
+            hint={editable ? d.customer.planHint : d.customer.planHintReadOnly}
+          >
             {editable ? (
               <form action={updateCustomerPlan} className="space-y-3">
                 <input type="hidden" name="customerId" value={customer.id} />
-                <Field label="Plan">
+                <Field label={d.customer.plan}>
                   <select className="input" name="planCode" defaultValue={customer.planCode}>
                     {plans.map((plan) => (
                       <option key={plan.code} value={plan.code}>
@@ -217,21 +263,22 @@ export default async function CustomerPage({
                   </select>
                 </Field>
                 <button type="submit" className="btn btn-primary w-full">
-                  Update plan
+                  {d.customer.updatePlan}
                 </button>
               </form>
             ) : (
               <p className="text-[12px] leading-relaxed text-slate-500">
-                Your role (<span className="font-medium text-ink-700">{member.role}</span>) can view
-                accounts but not change them. Sign in as an owner or admin to edit.
+                {t(d.customer.readOnlyNote, {
+                  role: d.roles[member.role as keyof typeof d.roles] ?? member.role,
+                })}
               </p>
             )}
           </SectionCard>
 
           {customer.churnedAt ? (
-            <SectionCard title="Churn">
+            <SectionCard title={d.customer.churn}>
               <p className="text-[12px] text-slate-500">
-                Churned on <span className="font-medium text-ink-700">{formatDate(customer.churnedAt)}</span>.
+                {t(d.customer.churnedOn, { date: formatDate(customer.churnedAt, locale) })}
               </p>
             </SectionCard>
           ) : null}
