@@ -4,8 +4,6 @@ import { intlLocale, type Locale } from "@/lib/locale";
 
 export const DAY = 86_400_000;
 
-/* ------------------------------------------------------------------ dates */
-
 export function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
@@ -26,8 +24,6 @@ function pctChange(current: number, previous: number): number {
   if (!previous) return current ? 100 : 0;
   return ((current - previous) / previous) * 100;
 }
-
-/* ------------------------------------------------------------------- core */
 
 export type CoreCustomer = {
   id: string;
@@ -101,7 +97,6 @@ async function loadCore(): Promise<Core> {
   return { customers, invoices, byCustomer, prevAmount, firstInvoice, lastInvoice };
 }
 
-/** MRR at the end of a given date = sum of each live customer's latest invoice. */
 function mrrAt(core: Core, date: Date): number {
   let total = 0;
   for (const customer of core.customers) {
@@ -127,7 +122,6 @@ function mrrAt(core: Core, date: Date): number {
   return total;
 }
 
-/** Paying customers alive on a date. */
 function activeAt(core: Core, date: Date): number {
   let total = 0;
   for (const customer of core.customers) {
@@ -180,8 +174,6 @@ function churnRateBetween(core: Core, start: Date, end: Date): number {
   return (churned / opening) * 100;
 }
 
-/* ------------------------------------------------------------------ series */
-
 function monthPoints(count: number, now = new Date(), locale: Locale = "en"): { start: Date; end: Date; label: string }[] {
   const current = startOfMonth(now);
   const points = [];
@@ -198,8 +190,6 @@ function monthPoints(count: number, now = new Date(), locale: Locale = "en"): { 
   }
   return points;
 }
-
-/* ----------------------------------------------------------------- overview */
 
 export type SeriesPoint = { label: string; value: number };
 export type MovementPoint = { label: string; new: number; expansion: number; contraction: number; churn: number };
@@ -375,8 +365,6 @@ export async function getOverview(locale: Locale = "en"): Promise<OverviewData> 
   };
 }
 
-/* ------------------------------------------------------------------ revenue */
-
 export type RevenueRange = "3m" | "6m" | "12m";
 export const REVENUE_RANGES: RevenueRange[] = ["3m", "6m", "12m"];
 
@@ -462,8 +450,6 @@ export async function getRevenue(range: RevenueRange = "6m", locale: Locale = "e
     })),
   };
 }
-
-/* ---------------------------------------------------------------- retention */
 
 export type RetentionData = {
   cohorts: {
@@ -553,8 +539,6 @@ export async function getRetention(locale: Locale = "en"): Promise<RetentionData
   return { cohorts, periods, average };
 }
 
-/* ------------------------------------------------------------------- funnel */
-
 export type FunnelStep = {
   key: string;
   count: number;
@@ -643,8 +627,6 @@ export async function getFunnel(days = 90): Promise<FunnelData> {
     totalSignups: counts[0],
   };
 }
-
-/* ---------------------------------------------------------------- customers */
 
 export type CustomerFilters = {
   q?: string;
@@ -755,8 +737,6 @@ export async function getCustomerDetail(id: string) {
   };
 }
 
-/* --------------------------------------------------------------------- team */
-
 export async function getTeam() {
   const members = await prisma.member.findMany({
     orderBy: [{ role: "asc" }, { createdAt: "asc" }],
@@ -764,8 +744,6 @@ export async function getTeam() {
   });
   return members;
 }
-
-/* --------------------------------------------------------------- workspace */
 
 export async function getWorkspace() {
   const [workspace, settings] = await Promise.all([

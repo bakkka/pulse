@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isLocale, LOCALE_COOKIE } from "@/lib/locale";
 
-/** Cookie-based locale switch through a plain GET redirect (works without JS). */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const requested = url.searchParams.get("to");

@@ -859,7 +859,6 @@ export function getDict(locale: Locale): Dict {
   return locale === "ru" ? ru : en;
 }
 
-/** Tiny template helper: t("Showing {n} of {total}", { n: 1, total: 10 }) */
 export function t(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
 }

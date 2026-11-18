@@ -1,12 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/password";
 
-/**
- * Deterministic demo dataset for Pulse.
- * Everything on the dashboard is computed from these rows:
- * invoices drive revenue and MRR movement, events drive cohorts, funnels and live activity.
- */
-
 export const DEMO_PASSWORD = "pulse";
 
 export const DEMO_MEMBERS = [
@@ -77,7 +71,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
   const pick = <T,>(items: T[]): T => items[Math.floor(rand() * items.length)];
   const between = (min: number, max: number) => min + rand() * (max - min);
 
-  // ---------------------------------------------------------------- wipe
   await prisma.event.deleteMany();
   await prisma.invoice.deleteMany();
   await prisma.customer.deleteMany();
@@ -86,7 +79,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
   await prisma.workspace.deleteMany();
   await prisma.setting.deleteMany();
 
-  // ------------------------------------------------------------ workspace
   await prisma.workspace.create({
     data: { id: "ws_demo", name: "Acme Cloud", currency: "USD", timezone: "UTC" },
   });
@@ -111,7 +103,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
     ],
   });
 
-  // ---------------------------------------------------------------- plans
   for (const plan of DEMO_PLANS) {
     await prisma.plan.create({ data: plan });
   }
@@ -119,7 +110,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
   const planIndex = new Map(DEMO_PLANS.map((plan, index) => [plan.code, index]));
   const planCodes = DEMO_PLANS.map((plan) => plan.code);
 
-  // ------------------------------------------------------------ accounts
   type AccountRow = {
     id: string;
     name: string;
@@ -163,7 +153,7 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
   };
 
   for (let i = 0; i < accountCount; i += 1) {
-    // Slight bias toward recent months so the base looks like it is growing.
+
     const daysAgo = Math.floor(Math.pow(rand(), 1.2) * 365);
     const createdAt = new Date(now.getTime() - daysAgo * DAY - Math.floor(rand() * 12) * 3_600_000);
     const cohortMonth = startOfMonth(createdAt);
@@ -178,13 +168,11 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
     const domain = company.toLowerCase().replace(/[^a-z]/g, "") + ".com";
     const slug = `${firstName}.${lastName}`.toLowerCase();
 
-    // ---------------------------------------------------------- funnel
     const activated = rand() < 0.82;
     const project = activated && rand() < 0.78;
     const team = project && rand() < 0.78;
     const paying = team && rand() < 0.9;
 
-    // ------------------------------------------------------- plan & churn
     const initialPlan = weighted(rand, [0.52, 0.35, 0.13]);
     let currentPlan = initialPlan;
     let currentMrr = DEMO_PLANS[currentPlan].priceCents;
@@ -202,7 +190,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
 
     const isTrialing = !paying && monthsSince === 0 && rand() < 0.55;
 
-    // ----------------------------------------------------------- invoices
     let lastMrr = 0;
     if (paying) {
       for (let m = 0; m <= monthsSince; m += 1) {
@@ -275,7 +262,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
       churnedAt,
     });
 
-    // ------------------------------------------------------------- events
     pushEvent(`c_${i + 1}`, "signup", createdAt, JSON.stringify({ source: SOURCES[weighted(rand, SOURCE_WEIGHTS)] }));
     if (activatedAt) pushEvent(`c_${i + 1}`, "activated", activatedAt);
     if (projectAt) pushEvent(`c_${i + 1}`, "project_created", projectAt);
@@ -285,7 +271,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
       pushEvent(`c_${i + 1}`, "paid", paidAt, JSON.stringify({ plan: planCodes[currentPlan] }));
     }
 
-    // Monthly product activity — this is what the cohort heatmap counts.
     const activityBase = paying ? 0.92 : 0.55;
     for (let m = 0; m <= monthsSince; m += 1) {
       const monthStart = addMonths(cohortMonth, m);
@@ -311,7 +296,6 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
   await prisma.customer.createMany({ data: accounts });
   await prisma.invoice.createMany({ data: invoices });
 
-  // ------------------------------------------------- live activity (now)
   const activeAccounts = accounts.filter((account) => account.status === "active");
   for (let i = 0; i < 48; i += 1) {
     const account = activeAccounts[Math.floor(rand() * activeAccounts.length)];

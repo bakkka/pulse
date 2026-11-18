@@ -70,7 +70,7 @@ export default async function LandingPage() {
       </header>
 
       <main>
-        {/* hero */}
+
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-dots opacity-70" aria-hidden="true" />
           <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-16 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:pb-24">
@@ -123,7 +123,6 @@ export default async function LandingPage() {
               </dl>
             </div>
 
-            {/* product preview */}
             <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
               <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-pop">
                 <div className="flex items-center gap-2 border-b border-line bg-slate-50/80 px-4 py-2.5">
@@ -194,7 +193,6 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* features */}
         <section id="product" className="border-t border-line py-16 sm:py-20">
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="max-w-2xl">
@@ -221,7 +219,6 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* under the hood */}
         <section id="under-the-hood" className="border-t border-line bg-white py-16 sm:py-20">
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="max-w-2xl">
@@ -271,7 +268,6 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* metrics */}
         <section id="metrics" className="border-t border-line py-14">
           <div className="mx-auto grid w-full max-w-6xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
             {[
@@ -288,7 +284,6 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* cta */}
         <section className="py-16 sm:py-20">
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="relative overflow-hidden rounded-3xl border border-brand/15 bg-gradient-to-br from-brand-50 via-white to-white p-8 sm:p-12">

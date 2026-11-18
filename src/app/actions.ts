@@ -13,8 +13,6 @@ function str(formData: FormData, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-/* -------------------------------------------------------------------- auth */
-
 export async function signIn(formData: FormData): Promise<void> {
   const email = str(formData, "email").toLowerCase();
   const password = str(formData, "password");
@@ -35,8 +33,6 @@ export async function signOut(): Promise<void> {
   await destroySession();
   redirect("/login");
 }
-
-/* -------------------------------------------------------------------- team */
 
 const ROLES = ["owner", "admin", "viewer"];
 
@@ -109,8 +105,6 @@ export async function removeMember(formData: FormData): Promise<void> {
   redirect("/app/team?ok=removed");
 }
 
-/* --------------------------------------------------------------- workspace */
-
 export async function saveWorkspace(formData: FormData): Promise<void> {
   await requireRole("admin");
 
@@ -140,8 +134,6 @@ export async function saveWorkspace(formData: FormData): Promise<void> {
   redirect("/app/settings?ok=saved");
 }
 
-/* -------------------------------------------------------------- customers */
-
 export async function updateCustomerPlan(formData: FormData): Promise<void> {
   await requireRole("admin");
 
@@ -167,8 +159,6 @@ export async function updateCustomerPlan(formData: FormData): Promise<void> {
   revalidatePath(`/app/customers/${customerId}`);
   redirect(`/app/customers/${customerId}?ok=saved`);
 }
-
-/* ------------------------------------------------------------------ demo */
 
 export async function resetDemoData(): Promise<void> {
   const member = await requireMember();
