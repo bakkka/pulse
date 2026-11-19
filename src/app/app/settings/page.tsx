@@ -1,4 +1,3 @@
-import { Database, Gauge, KeyRound, RotateCcw, Save, ShieldCheck } from "lucide-react";
 import { canEdit, canManageTeam, requireMember } from "@/lib/auth";
 import { getWorkspace } from "@/lib/analytics";
 import { getDict, getLocale, t } from "@/lib/i18n";
@@ -21,20 +20,18 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   };
 
   const roleName = d.roles[member.role as keyof typeof d.roles] ?? member.role;
-  const icons = [Database, KeyRound, ShieldCheck, Gauge];
 
   return (
     <div className="space-y-5">
       <PageHeader
         title={d.settings.title}
-        subtitle={d.settings.subtitle}
         actions={<Badge tone={editable ? "brand" : "neutral"}>{roleName}</Badge>}
       />
 
       {ok && notices[ok] ? <Notice tone={notices[ok].tone}>{notices[ok].text}</Notice> : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <SectionCard className="lg:col-span-2" title={d.settings.workspace} hint={d.settings.workspaceHint}>
+        <SectionCard className="lg:col-span-2" title={d.settings.workspace}>
           {editable ? (
             <form action={saveWorkspace} className="space-y-4">
               <Field label={d.settings.name}>
@@ -43,9 +40,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label={d.settings.currency}>
                   <select className="input" name="currency" defaultValue={workspace?.currency ?? "USD"}>
-                    <option value="USD">USD — US dollar</option>
-                    <option value="EUR">EUR — Euro</option>
-                    <option value="GBP">GBP — Pound sterling</option>
+                    <option value="USD">USD (US dollar)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="GBP">GBP (Pound sterling)</option>
                   </select>
                 </Field>
                 <Field label={d.settings.timezone}>
@@ -59,7 +56,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               </div>
               <div className="flex justify-end border-t border-line-soft pt-4">
                 <button type="submit" className="btn btn-primary">
-                  <Save size={15} />
                   {d.settings.save}
                 </button>
               </div>
@@ -71,14 +67,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           )}
         </SectionCard>
 
-        <SectionCard title={d.settings.about} hint={d.settings.aboutHint}>
+        <SectionCard title={d.settings.about}>
           <ul className="space-y-3 text-[12px] text-slate-500">
-            {d.settings.aboutItems.map((item, index) => {
-              const Icon = icons[index] ?? Database;
+            {d.settings.aboutItems.map((item) => {
               const [title, ...rest] = item.split(". ");
               return (
-                <li key={item} className="flex gap-2">
-                  <Icon size={14} className="mt-0.5 shrink-0 text-slate-400" />
+                <li key={item}>
                   <span>
                     <strong className="font-medium text-ink-700">{title}.</strong>{" "}
                     {rest.join(". ")}
@@ -90,13 +84,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </SectionCard>
       </div>
 
-      <SectionCard title={d.settings.demo} hint={d.settings.demoHint}>
+      <SectionCard title={d.settings.demo}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="max-w-lg text-[12px] leading-relaxed text-slate-500">{d.settings.demoText}</p>
           {isOwner ? (
             <form action={resetDemoData}>
               <button type="submit" className="btn btn-danger">
-                <RotateCcw size={15} />
                 {d.settings.reset}
               </button>
             </form>

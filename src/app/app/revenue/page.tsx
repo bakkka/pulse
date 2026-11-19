@@ -34,7 +34,6 @@ export default async function RevenuePage({
     <div className="space-y-5">
       <PageHeader
         title={d.revenue.title}
-        subtitle={d.revenue.subtitle}
         actions={
           <div className="flex items-center gap-0.5 rounded-lg border border-line bg-white p-0.5">
             {RANGES.map((item) => (
@@ -92,8 +91,6 @@ export default async function RevenuePage({
         <SectionCard
           className="lg:col-span-2"
           title={d.revenue.mrrChart}
-          hint={d.revenue.mrrChartHint}
-          actions={<Badge tone="brand">{formatMoney(data.currentMrr)}</Badge>}
         >
           <AreaChart data={data.mrrSeries} height={250} />
         </SectionCard>
@@ -146,7 +143,6 @@ export default async function RevenuePage({
 
       <SectionCard
         title={d.revenue.movementBars}
-        hint={d.revenue.movementBarsHint}
         actions={
           <div className="hidden flex-wrap items-center gap-2 sm:flex">
             {legend.map((item) => (
@@ -161,7 +157,7 @@ export default async function RevenuePage({
         <MovementBars data={data.movement} height={250} />
       </SectionCard>
 
-      <SectionCard title={d.revenue.latestInvoices} hint={d.revenue.latestInvoicesHint} bodyClassName="p-0">
+      <SectionCard title={d.revenue.latestInvoices} bodyClassName="p-0">
         {data.invoices.length === 0 ? (
           <EmptyState title={d.revenue.latestInvoices} />
         ) : (

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity, ArrowLeft, ArrowRight, BarChart3, CheckCircle2, KeyRound } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight } from "lucide-react";
 import { signIn } from "@/app/actions";
 import { getCurrentMember } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -106,7 +106,6 @@ export default async function LoginPage({
                   href={`/login?as=${account.as}`}
                   className="flex items-center gap-3 rounded-xl border border-line bg-white px-3 py-2 text-[12px] transition hover:border-brand/30 hover:shadow-card"
                 >
-                  <KeyRound size={13} className="text-slate-400" />
                   <span className="font-medium text-ink-700">{d.roles[account.as]}</span>
                   <span className="font-mono text-[11px] text-slate-400">{account.email}</span>
                   <span className="ml-auto text-[11px] text-slate-400">{d.login.details[account.as]}</span>
@@ -122,10 +121,7 @@ export default async function LoginPage({
         <div className="absolute inset-0 bg-dots opacity-40" />
 
         <div className="relative mx-auto w-full max-w-md px-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-indigo-300">
-            {d.login.badge}
-          </p>
-          <h2 className="mt-3 text-[30px] font-semibold leading-tight tracking-tight text-white">
+          <h2 className="text-[30px] font-semibold leading-tight tracking-tight text-white">
             {d.login.headline}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">{d.login.description}</p>
@@ -138,9 +134,6 @@ export default async function LoginPage({
                   {formatMoney(mrrAggregate._sum.mrrCents ?? 0)}
                 </p>
               </div>
-              <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
-                {d.login.preview.live}
-              </span>
             </div>
             <div className="mt-5 flex h-20 items-end gap-1.5">
               {[32, 38, 35, 44, 41, 52, 49, 58, 55, 64, 61, 72, 68, 78, 74, 86].map((value, index) => (
@@ -167,16 +160,12 @@ export default async function LoginPage({
 
           <ul className="mt-7 space-y-2 text-[13px] text-slate-300">
             {d.login.bullets.map((item) => (
-              <li key={item} className="flex items-center gap-2">
-                <CheckCircle2 size={15} className="text-emerald-400" />
-                {item}
-              </li>
+              <li key={item}>{item}</li>
             ))}
           </ul>
         </div>
 
         <div className="relative mx-auto mt-10 flex w-full max-w-md items-center gap-2 px-10 text-[11px] text-slate-600">
-          <BarChart3 size={13} />
           {d.login.footer}
         </div>
       </div>

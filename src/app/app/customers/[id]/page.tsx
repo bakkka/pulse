@@ -1,16 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  Building2,
-  CalendarDays,
-  CreditCard,
-  Globe2,
-  Mail,
-  Sparkles,
-  UserRound,
-  Zap,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getCustomerDetail } from "@/lib/analytics";
 import { prisma } from "@/lib/db";
 import { canEdit, requireMember } from "@/lib/auth";
@@ -28,15 +18,6 @@ import {
   SectionCard,
   StatusBadge,
 } from "@/components/ui";
-
-const EVENT_ICONS: Record<string, React.ReactNode> = {
-  signup: <Sparkles size={13} />,
-  activated: <Zap size={13} />,
-  project_created: <Building2 size={13} />,
-  invited_team: <UserRound size={13} />,
-  paid: <CreditCard size={13} />,
-  session: <Zap size={13} />,
-};
 
 export default async function CustomerPage({
   params,
@@ -83,14 +64,8 @@ export default async function CustomerPage({
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-semibold tracking-tight text-ink">{customer.name}</h1>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-slate-500">
-            <span className="flex items-center gap-1">
-              <Building2 size={12} />
-              {customer.company}
-            </span>
-            <span className="flex items-center gap-1">
-              <Mail size={12} />
-              {customer.email}
-            </span>
+            <span>{customer.company}</span>
+            <span>{customer.email}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -186,15 +161,12 @@ export default async function CustomerPage({
             </SectionCard>
           ) : null}
 
-          <SectionCard title={d.customer.activity} hint={d.customer.activityHint} bodyClassName="p-0">
+          <SectionCard title={d.customer.activity} bodyClassName="p-0">
             <ul className="divide-y divide-line-soft">
               {customer.events.map((event) => {
                 const meta = eventLabel(event.name);
                 return (
                   <li key={event.id} className="flex items-start gap-3 px-5 py-3">
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                      {EVENT_ICONS[event.name] ?? <Zap size={13} />}
-                    </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-ink">{meta.title}</p>
                       <p className="text-[11px] text-slate-400">{meta.hint}</p>
@@ -213,33 +185,26 @@ export default async function CustomerPage({
           <SectionCard title={d.customer.account} bodyClassName="p-0">
             <dl className="divide-y divide-line-soft text-[12px]">
               {[
-                { icon: <Globe2 size={12} />, label: d.customer.country, value: customer.country },
+                { label: d.customer.country, value: customer.country },
                 {
-                  icon: <CalendarDays size={12} />,
                   label: d.customer.joined,
                   value: formatDate(customer.createdAt, locale),
                 },
                 {
-                  icon: <Zap size={12} />,
                   label: d.customer.activated,
                   value: customer.activatedAt ? formatDate(customer.activatedAt, locale) : "—",
                 },
                 {
-                  icon: <UserRound size={12} />,
                   label: d.customer.owner,
                   value: customer.owner?.name ?? d.customer.unassigned,
                 },
                 {
-                  icon: <CreditCard size={12} />,
                   label: d.customer.eventsCount,
                   value: String(detail.eventCount),
                 },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between gap-3 px-5 py-2.5">
-                  <dt className="flex items-center gap-1.5 text-slate-400">
-                    {row.icon}
-                    {row.label}
-                  </dt>
+                  <dt className="text-slate-400">{row.label}</dt>
                   <dd className="font-medium text-ink-700">{row.value}</dd>
                 </div>
               ))}
@@ -257,7 +222,7 @@ export default async function CustomerPage({
                   <select className="input" name="planCode" defaultValue={customer.planCode}>
                     {plans.map((plan) => (
                       <option key={plan.code} value={plan.code}>
-                        {plan.name} — {formatMoney(plan.priceCents)}
+                        {plan.name} ({formatMoney(plan.priceCents)})
                       </option>
                     ))}
                   </select>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CircleDot } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { getOverview } from "@/lib/analytics";
 import { formatMoney, formatNumber, formatPercent, formatRelative } from "@/lib/format";
 import { getDict, getLocale } from "@/lib/i18n";
@@ -26,7 +26,6 @@ export default async function OverviewPage() {
     <div className="space-y-5">
       <PageHeader
         title={d.overview.title}
-        subtitle={d.overview.subtitle}
         actions={
           <>
             <Badge tone="neutral">{d.overview.period}</Badge>
@@ -132,7 +131,6 @@ export default async function OverviewPage() {
         <SectionCard
           className="lg:col-span-2 lg:h-[420px]"
           title={d.overview.movement}
-          hint={d.overview.movementHint}
           actions={
             <div className="hidden flex-wrap items-center gap-2 sm:flex">
               {movementLegend.map((item) => (
@@ -235,7 +233,6 @@ export default async function OverviewPage() {
                   <td className="px-3 py-3 font-medium text-ink">{formatMoney(customer.lifetimeCents)}</td>
                   <td className="px-5 py-3 text-right">
                     <Badge tone="good">
-                      <CircleDot size={9} />
                       {d.status.active}
                     </Badge>
                   </td>

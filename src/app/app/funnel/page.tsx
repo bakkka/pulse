@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight, CalendarClock, TrendingDown } from "lucide-react";
 import { getFunnel } from "@/lib/analytics";
 import { formatNumber, formatPercent } from "@/lib/format";
 import { getDict, getLocale, t } from "@/lib/i18n";
@@ -33,7 +32,6 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
     <div className="space-y-5">
       <PageHeader
         title={d.funnel.title}
-        subtitle={d.funnel.subtitle}
         actions={
           <div className="flex items-center gap-0.5 rounded-lg border border-line bg-white p-0.5">
             {RANGES.map((range) => (
@@ -72,7 +70,7 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
         />
       </div>
 
-      <SectionCard title={d.funnel.title} hint={d.funnel.subtitle}>
+      <SectionCard title={d.funnel.title}>
         <div className="space-y-5">
           {data.steps.map((step, index) => {
             const width = signups ? (step.count / signups) * 100 : 0;
@@ -101,7 +99,6 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
                           step.fromPrevious >= 60 ? "text-slate-400" : "text-bad"
                         }`}
                       >
-                        <TrendingDown size={11} />
                         {t(d.funnel.stepConversion, { n: formatPercent(step.fromPrevious, 0) })}
                       </span>
                     ) : null}
@@ -122,15 +119,13 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-[12px] text-slate-500">
-          <CalendarClock size={14} className="text-slate-400" />
           <span>{t(d.funnel.avgConvert, { n: data.avgDaysToConvert.toFixed(1) })}</span>
-          <ArrowRight size={13} className="text-slate-300" />
           <span>{t(d.funnel.window, { n: formatPercent(conversion, 0) })}</span>
         </div>
       </SectionCard>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard title={d.funnel.sources} hint={d.funnel.sourcesHint}>
+        <SectionCard title={d.funnel.sources}>
           <ul className="space-y-3">
             {data.sources.map((source) => (
               <li key={source.source}>
@@ -156,7 +151,7 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
           </ul>
         </SectionCard>
 
-        <SectionCard title={d.funnel.tips} hint={d.funnel.tipsHint}>
+        <SectionCard title={d.funnel.tips}>
           <ul className="space-y-3 text-[12px] leading-relaxed text-slate-500">
             <li className="rounded-xl border border-line-soft bg-slate-50/60 p-3">
               <strong className="font-semibold text-ink">{d.funnel.tip1Title}</strong> {d.funnel.tip1Text}

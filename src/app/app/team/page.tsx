@@ -1,4 +1,4 @@
-import { ShieldCheck, Trash2, UserPlus } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { canManageTeam, requireMember } from "@/lib/auth";
 import { getTeam } from "@/lib/analytics";
 import { formatDate, formatNumber, formatRelative, pluralRu } from "@/lib/format";
@@ -44,7 +44,6 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     <div className="space-y-5">
       <PageHeader
         title={d.team.title}
-        subtitle={d.team.subtitle}
         actions={
           <Badge tone="neutral">
             {formatNumber(members.length)} {membersLabel}
@@ -58,7 +57,6 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
         {ROLE_KEYS.map((role) => (
           <div key={role} className="card p-4">
             <div className="flex items-center gap-2">
-              <ShieldCheck size={15} className="text-slate-400" />
               <span className="text-[13px] font-semibold text-ink">{d.roles[role]}</span>
               <Badge tone={roleTone(role)} className="ml-auto">
                 {roleCounts[role] ?? 0}
@@ -92,7 +90,6 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
             </Field>
             <div className="flex items-end">
               <button type="submit" className="btn btn-primary w-full">
-                <UserPlus size={15} />
                 {d.team.inviteButton}
               </button>
             </div>
@@ -178,7 +175,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                         <button
                           type="submit"
                           className="inline-flex rounded-md border border-line p-1.5 text-slate-400 transition hover:border-bad/30 hover:text-bad"
-                          aria-label={`${d.team.remove} — ${row.name}`}
+                          aria-label={`${d.team.remove}: ${row.name}`}
                         >
                           <Trash2 size={13} />
                         </button>

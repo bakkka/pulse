@@ -1,4 +1,3 @@
-import { Info } from "lucide-react";
 import { getRetention } from "@/lib/analytics";
 import { formatNumber, formatPercent } from "@/lib/format";
 import { getDict, getLocale } from "@/lib/i18n";
@@ -35,7 +34,6 @@ export default async function RetentionPage() {
     <div className="space-y-5">
       <PageHeader
         title={d.retention.title}
-        subtitle={d.retention.subtitle}
         actions={<span className="chip">{d.retention.chip}</span>}
       />
 
@@ -48,7 +46,6 @@ export default async function RetentionPage() {
 
       <SectionCard
         title={d.retention.heatmap}
-        hint={d.retention.heatmapHint}
         actions={
           <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
             <span>0%</span>
@@ -111,14 +108,11 @@ export default async function RetentionPage() {
           <AreaChart data={curve} format="percent" height={240} color="#4F46E5" />
         </SectionCard>
 
-        <SectionCard title={d.retention.how} hint={d.retention.howHint}>
-          <div className="flex gap-2.5 text-[12px] leading-relaxed text-slate-500">
-            <Info size={15} className="mt-0.5 shrink-0 text-slate-400" />
-            <div className="space-y-2">
-              <p>{d.retention.howP1}</p>
-              <p>{d.retention.howP2}</p>
-              <p className="text-slate-400">{d.retention.howP3}</p>
-            </div>
+        <SectionCard title={d.retention.how}>
+          <div className="space-y-2 text-[12px] leading-relaxed text-slate-500">
+            <p>{d.retention.howP1}</p>
+            <p>{d.retention.howP2}</p>
+            <p className="text-slate-400">{d.retention.howP3}</p>
           </div>
         </SectionCard>
       </div>

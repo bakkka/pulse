@@ -4,16 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
-  BarChart3,
   ExternalLink,
-  Grid3x3,
-  LayoutDashboard,
-  ListFilter,
   LogOut,
-  Settings,
-  ShieldCheck,
-  Users,
-  type LucideIcon,
 } from "lucide-react";
 import { signOut } from "@/app/actions";
 import { cn } from "@/components/ui";
@@ -32,25 +24,25 @@ export type NavLabels = {
   signOut: string;
 };
 
-type NavItem = { key: string; href: string; label: string; icon: LucideIcon };
+type NavItem = { key: string; href: string; label: string };
 
 function buildGroups(labels: NavLabels): { label: string; items: NavItem[] }[] {
   return [
     {
       label: labels.analytics,
       items: [
-        { key: "overview", href: "/app", label: labels.overview, icon: LayoutDashboard },
-        { key: "revenue", href: "/app/revenue", label: labels.revenue, icon: BarChart3 },
-        { key: "retention", href: "/app/retention", label: labels.retention, icon: Grid3x3 },
-        { key: "funnel", href: "/app/funnel", label: labels.funnel, icon: ListFilter },
+        { key: "overview", href: "/app", label: labels.overview },
+        { key: "revenue", href: "/app/revenue", label: labels.revenue },
+        { key: "retention", href: "/app/retention", label: labels.retention },
+        { key: "funnel", href: "/app/funnel", label: labels.funnel },
       ],
     },
     {
       label: labels.workspace,
       items: [
-        { key: "customers", href: "/app/customers", label: labels.customers, icon: Users },
-        { key: "team", href: "/app/team", label: labels.team, icon: ShieldCheck },
-        { key: "settings", href: "/app/settings", label: labels.settings, icon: Settings },
+        { key: "customers", href: "/app/customers", label: labels.customers },
+        { key: "team", href: "/app/team", label: labels.team },
+        { key: "settings", href: "/app/settings", label: labels.settings },
       ],
     },
   ];
@@ -94,7 +86,6 @@ export function AppNav({
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isActive(pathname, item.href);
-                const Icon = item.icon;
                 return (
                   <Link
                     key={item.key}
@@ -106,7 +97,6 @@ export function AppNav({
                         : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
                     )}
                   >
-                    <Icon size={16} className={active ? "text-indigo-300" : "text-slate-500"} />
                     {item.label}
                   </Link>
                 );

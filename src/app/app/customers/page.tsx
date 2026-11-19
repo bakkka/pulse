@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCustomers } from "@/lib/analytics";
 import { formatDate, formatMoney, formatNumber } from "@/lib/format";
 import { getDict, getLocale } from "@/lib/i18n";
@@ -54,7 +54,6 @@ export default async function CustomersPage({
         subtitle={`${formatNumber(data.total)} ${d.customers.subtitle}`}
         actions={
           <a href={`/api/export/customers?${exportQuery.toString()}`} className="btn btn-ghost btn-sm">
-            <Download size={14} />
             {d.customers.export}
           </a>
         }
@@ -74,16 +73,13 @@ export default async function CustomersPage({
 
         <form method="get" className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
           <input type="hidden" name="status" value={status} />
-          <div className="relative min-w-[220px] flex-1">
-            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              className="input pl-9"
-              name="q"
-              defaultValue={q}
-              placeholder={d.customers.searchPlaceholder}
-              autoComplete="off"
-            />
-          </div>
+          <input
+            className="input min-w-[220px] flex-1"
+            name="q"
+            defaultValue={q}
+            placeholder={d.customers.searchPlaceholder}
+            autoComplete="off"
+          />
           <select className="input w-auto min-w-[140px]" name="plan" defaultValue={plan}>
             <option value="">{d.customers.allPlans}</option>
             {data.plans.map((item) => (
@@ -154,6 +150,7 @@ export default async function CustomersPage({
                       <td className="px-5 py-3 text-right">
                         <Link
                           href={`/app/customers/${customer.id}`}
+                          aria-label={customer.name}
                           className="inline-flex rounded-md border border-line p-1 text-slate-400 transition hover:border-brand/40 hover:text-brand"
                         >
                           <ChevronRight size={13} />

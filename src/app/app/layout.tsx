@@ -52,14 +52,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
 
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
-              <span className="hidden items-center gap-1.5 text-[11px] font-medium text-slate-500 sm:flex">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-good opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-good" />
-                </span>
-                {d.common.live}
-              </span>
-
               <LocaleSwitch locale={locale} />
 
               <Link href="/" className="btn btn-ghost btn-sm">
