@@ -113,8 +113,15 @@ docs/
 
 ## Deploy notes
 
-1. Postgres (Neon/Supabase): change `provider` in `prisma/schema.prisma`, set `DATABASE_URL`.
-2. Vercel: `DATABASE_URL`, `PULSE_SESSION_SECRET`, `NEXT_PUBLIC_APP_URL`.
-3. Seed once: `npx prisma db push && npm run db:seed`.
+1. Vercel: import the repo. `vercel.json` runs `npm run vercel-build`, which generates a Postgres client from the SQLite schema; local development keeps using `prisma/dev.db`.
+2. Create a Postgres database (Neon/Supabase) and add `DATABASE_URL` to the Vercel project (pooled URL with `?sslmode=require`).
+3. From your machine, point the same variable at that database and run the schema and seed once:
+
+   ```bash
+   DATABASE_URL="postgresql://user:pass@host/db?sslmode=require" npm run db:push:postgres
+   DATABASE_URL="postgresql://user:pass@host/db?sslmode=require" npm run db:seed:postgres
+   ```
+
+4. Also set `PULSE_SESSION_SECRET` and `NEXT_PUBLIC_APP_URL` in Vercel.
 
 > Demo data is synthetic and invoices are simulated. Built as a portfolio case, not a production billing system.

@@ -303,5 +303,7 @@ export async function seedDatabase(prisma: PrismaClient, accountCount = 1400): P
   }
 
   events.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  await prisma.event.createMany({ data: events });
+  for (let i = 0; i < events.length; i += 2_000) {
+    await prisma.event.createMany({ data: events.slice(i, i + 2_000) });
+  }
 }
